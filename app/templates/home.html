@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan the url</title>
+</head>
+
+<body>
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Scan URL</title>
+    </head>
+
+    <body>
+
+        <input type="text" id="urlInput" placeholder="Enter URL (e.g., www.google.com)">
+
+        <button id="runTaskBtn">scan</button>
+        <div id="loadingText" style="display: none;">Task is running, please wait...</div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+        <script>
+            var id;
+
+
+
+            $('#runTaskBtn').click(function () {
+
+                // Capture the URL from the input field
+                let targetUrl = $('#urlInput').val();
+                console.log("Captured URL:", targetUrl);
+                var csrftoken = $('[name=csrfmiddlewaretoken]').val();
+                $.ajax({
+                    url: '{% url "show_result" %}',
+                    method: 'POST',
+
+                    data: {
+                        'url1': $('#urlInput').val()
+                    },
+                    success: function (response) {
+                        if (response.status === "started") {
+                            // Display the loading text and periodically check task status
+                            $('#loadingText').show();
+                            id = response.id
+
+                            checkTaskStatus(id);
+                            // console.log("TaskId is:", id);
+                        } else {
+                            alert("Task did not complete successfully");
+                        }
+                    },
+                    error: function (error) {
+                        alert('Failed to start task.');
+                    }
+                });
+            });
+
+            function checkTaskStatus(task_id) {
+                // Example function for periodically checking the task status
+                // Set up a periodic check every 5 seconds
+                // var csrftoken = $('[name=csrfmiddlewaretoken]').val();
+
+                let checkInterval = setInterval(function () {
+                    $.ajax({
+                        url: '{% url "check_task_status" %}',
+                        method: 'POST',
+
+
+                        data: {
+                            'task_id': task_id
+
+                        },
+                        success: function (response) {
+                            if (response.status === "completed") {
+                                $('#loadingText').hide();
+                                window.location.href = '{% url "show_scan" %}';
+                                clearInterval(checkInterval); // Clear the interval once the task is complete
+                            }
+                        },
+                        error: function (error) {
+                            // Handle any errors when checking the status if needed
+                        }
+                    });
+                }, 5000); // Check every 5 seconds, for example
+            }
+
+
+
+
+
+
+        </script>
+
+    </body>
+
+    </html>
